@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+<title>tcplfit2-vignette</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">tcplfit2-vignette</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(tcplfit2)</span></code></pre></div>
+<div id="getting-started-with-tcplfit2" class="section level1">
+<h1>Getting started with tcplfit2</h1>
+<p>The package tcplfit2 contains the core concentration-response functionality of the package tcpl (The ToxCast Pipeline) built to process all of the ToxCast high-throughput screen (HTS) data at the US EPA. Much of the rest of the code in tcpl is used to do data processing, normalization, and database storage. We wanted to reuse the core concentration-response code for other projects, and add extensions to it, which was the origin of the current package <em>tcplfit2</em>. The main set of extensions was to include all of the concentration-response models that are contained in the program BMDExpress. These include exponential and power functions in addition to the original Hill, gain-loss and constant models. Additionally, we wanted to include BMD (Benchmark Dose Modeling) outputs, which is simply defining a Benchmark Response (BMR) level and setting the BMD to the concentration where the curve crosses the BMR level. One final addition was to let the hitcall value be a continuous number ranging from 0 to 1. This vignette describes the basic functionality of this package with two simple examples.</p>
+<div id="example-1---running-a-single-concentration-response-calculation" class="section level2">
+<h2>Example 1 - Running a single concentration-response calculation</h2>
+<p>All calculations use the function <code>concRespCore</code> which has several key inputs. The first set are put into a named list called ‘row’:</p>
+<ul>
+<li><code>conc</code> - a vector of concentrations (not log concentrations)</li>
+<li><code>resp</code> - a vector of responses, of the same length as <code>conc</code>. Note that replicates are allowed, i.e. there can be multiple pairs of conc and resp with the same concentration value.</li>
+<li><code>cutoff</code>- this is the value that the response must exceed before a a curve can be called a hit. For ToxCast, this is usually some multiple (typically 3) of the median absolute deviation (BMAD) around baseline for the lowest two concentration. The user is free to make other choices</li>
+<li><code>bmed</code> - this is the median of the baseline, and will usually be set to zero. If not, the entire response series will be shifted by this amount.</li>
+<li><code>onesd</code>- This is one standard deviation of the nose around the baseline. The BMR value = <code>onesd</code>*<code>bmr_scale</code>. The default <code>bmr_scale</code> is 1.349.</li>
+</ul>
+<p>The list <code>row</code> can also have other optional elements which will be included in the output. These can be, for instance, the name of the chemical (or other identifiers) or the name of the assay being modeled. Two other parameters might be used. The first is a Boolean <code>conthits</code>. If TRUE (the default, and recommended usage), the hitcall returned will be a continuous value between 0 and 1. The other is <code>do.plot</code>. If this is set to TRUE (default is FALSE), a plot of the curve will be generated. The user can also select only a subset of the models to be run. The example below has all of the possible ones included. the model <code>cnst</code> always needs to be included. For some applications, we exclude the <code>gnls</code> model.</p>
+<p>To run a simple example, use the following code …</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>  conc &lt;-<span class="st"> </span><span class="kw">list</span>(.<span class="dv">03</span>,.<span class="dv">1</span>,.<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">10</span>,<span class="dv">30</span>,<span class="dv">100</span>)</span>
+<span id="cb2-2"><a href="#cb2-2"></a>  resp &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dv">0</span>,.<span class="dv">2</span>,.<span class="dv">1</span>,.<span class="dv">4</span>,.<span class="dv">7</span>,.<span class="dv">9</span>,.<span class="dv">6</span>, <span class="fl">1.2</span>)</span>
+<span id="cb2-3"><a href="#cb2-3"></a>  row =<span class="st"> </span><span class="kw">list</span>(<span class="dt">conc =</span> conc, <span class="dt">resp =</span> resp, <span class="dt">bmed =</span> <span class="dv">0</span>, <span class="dt">cutoff =</span> <span class="dv">1</span>, <span class="dt">onesd =</span> <span class="fl">.5</span>,<span class="dt">name=</span><span class="st">&quot;some chemical&quot;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4"></a>  res &lt;-<span class="st"> </span><span class="kw">concRespCore</span>(row,<span class="dt">fitmodels =</span> <span class="kw">c</span>(<span class="st">&quot;cnst&quot;</span>, <span class="st">&quot;hill&quot;</span>, <span class="st">&quot;gnls&quot;</span>, <span class="st">&quot;poly1&quot;</span>, <span class="st">&quot;poly2&quot;</span>, <span class="st">&quot;pow&quot;</span>, <span class="st">&quot;exp2&quot;</span>, <span class="st">&quot;exp3&quot;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5"></a>                                        <span class="st">&quot;exp4&quot;</span>, <span class="st">&quot;exp5&quot;</span>),<span class="dt">conthits =</span> T, <span class="dt">do.plot=</span>T)</span>
+<span id="cb2-6"><a href="#cb2-6"></a>  res<span class="op">$</span>summary</span></code></pre></div>
+<p>The output of this run will be a list with two elements. The first (<code>summary</code>) is a data frame with one row, summarizing the results for the winning model. The second (<code>all.models</code>) is a list giving detailed results for all of the models that were run.</p>
+</div>
+<div id="example-2-running-a-series-of-concentration-response-models-for-a-single-assay" class="section level2">
+<h2>Example 2: Running a series of concentration-response models for a single assay</h2>
+<p>The input data for this example is taken from one of the Tox21 HTS assays, for estrogen receptor (ER) agonist activity. The data is from the mc3 table in the database <code>invitrodb</code>, which is the back end for <em>tcpl</em>. This example will run 6 chemicals out of the 100 that are included in the data set, and will create plots for these. The plotting routine <code>concRespPlot</code> is somewhat generic, and we anticipate that users will make their own version of this. To run this example, use the following code …</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>  <span class="co"># read in the data</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>  file &lt;-<span class="st"> &quot;data/mc3.RData&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a>  <span class="kw">load</span>(<span class="dt">file=</span>file)</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  <span class="kw">print</span>(<span class="kw">dim</span>(mc3))</span>
+<span id="cb3-5"><a href="#cb3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6"></a>  <span class="co"># set up a 3 x 2 grid for the plots</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a>  oldpar &lt;-<span class="st"> </span><span class="kw">par</span>(<span class="dt">no.readonly =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb3-8"><a href="#cb3-8"></a>  <span class="kw">on.exit</span>(<span class="kw">par</span>(oldpar))            </span>
+<span id="cb3-9"><a href="#cb3-9"></a>  <span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">3</span>,<span class="dv">2</span>),<span class="dt">mar=</span><span class="kw">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">2</span>))</span>
+<span id="cb3-10"><a href="#cb3-10"></a></span>
+<span id="cb3-11"><a href="#cb3-11"></a>  <span class="co"># determine the background variation</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a>  temp &lt;-<span class="st"> </span>mc3[mc3<span class="op">$</span>logc<span class="op">&lt;=</span><span class="st"> </span><span class="dv">-2</span>,<span class="st">&quot;resp&quot;</span>]</span>
+<span id="cb3-13"><a href="#cb3-13"></a>  bmad &lt;-<span class="st"> </span><span class="kw">mad</span>(temp)</span>
+<span id="cb3-14"><a href="#cb3-14"></a>  onesd &lt;-<span class="st"> </span><span class="kw">sd</span>(temp)</span>
+<span id="cb3-15"><a href="#cb3-15"></a>  cutoff &lt;-<span class="st"> </span><span class="dv">3</span><span class="op">*</span>bmad</span>
+<span id="cb3-16"><a href="#cb3-16"></a></span>
+<span id="cb3-17"><a href="#cb3-17"></a>  <span class="co"># select six samples. Note that there may be more than one sample processed for a given chemical</span></span>
+<span id="cb3-18"><a href="#cb3-18"></a>  spid.list &lt;-<span class="st"> </span><span class="kw">unique</span>(mc3<span class="op">$</span>spid)</span>
+<span id="cb3-19"><a href="#cb3-19"></a>  spid.list &lt;-<span class="st"> </span>spid.list[<span class="dv">1</span><span class="op">:</span><span class="dv">6</span>]</span>
+<span id="cb3-20"><a href="#cb3-20"></a></span>
+<span id="cb3-21"><a href="#cb3-21"></a>  <span class="cf">for</span>(spid <span class="cf">in</span> spid.list) {</span>
+<span id="cb3-22"><a href="#cb3-22"></a>    <span class="co"># select the data for just this sample</span></span>
+<span id="cb3-23"><a href="#cb3-23"></a>    temp &lt;-<span class="st"> </span>mc3[<span class="kw">is.element</span>(mc3<span class="op">$</span>spid,spid),]</span>
+<span id="cb3-24"><a href="#cb3-24"></a></span>
+<span id="cb3-25"><a href="#cb3-25"></a>    <span class="co"># The data file has stored concentration in log10 form, so fix that</span></span>
+<span id="cb3-26"><a href="#cb3-26"></a>    conc &lt;-<span class="st"> </span><span class="dv">10</span><span class="op">**</span>temp<span class="op">$</span>logc</span>
+<span id="cb3-27"><a href="#cb3-27"></a>    resp &lt;-<span class="st"> </span>temp<span class="op">$</span>resp</span>
+<span id="cb3-28"><a href="#cb3-28"></a></span>
+<span id="cb3-29"><a href="#cb3-29"></a>    <span class="co"># pull out all of the chemical identifiers and the name of the assay</span></span>
+<span id="cb3-30"><a href="#cb3-30"></a>    dtxsid &lt;-<span class="st"> </span>temp[<span class="dv">1</span>,<span class="st">&quot;dtxsid&quot;</span>]</span>
+<span id="cb3-31"><a href="#cb3-31"></a>    casrn &lt;-<span class="st"> </span>temp[<span class="dv">1</span>,<span class="st">&quot;casrn&quot;</span>]</span>
+<span id="cb3-32"><a href="#cb3-32"></a>    name &lt;-<span class="st"> </span>temp[<span class="dv">1</span>,<span class="st">&quot;name&quot;</span>]</span>
+<span id="cb3-33"><a href="#cb3-33"></a>    assay &lt;-<span class="st"> </span>temp[<span class="dv">1</span>,<span class="st">&quot;assay&quot;</span>]</span>
+<span id="cb3-34"><a href="#cb3-34"></a></span>
+<span id="cb3-35"><a href="#cb3-35"></a>    <span class="co"># create the row object</span></span>
+<span id="cb3-36"><a href="#cb3-36"></a>    row &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">conc =</span> conc, <span class="dt">resp =</span> resp, <span class="dt">bmed =</span> <span class="dv">0</span>, <span class="dt">cutoff =</span> cutoff, <span class="dt">onesd =</span> onesd,<span class="dt">assay=</span>assay,<span class="dt">dtxsid=</span>dtxsid,<span class="dt">casrn=</span>casrn,<span class="dt">name=</span>name)</span>
+<span id="cb3-37"><a href="#cb3-37"></a></span>
+<span id="cb3-38"><a href="#cb3-38"></a>    <span class="co"># run the concentration-response modeling for a single sample</span></span>
+<span id="cb3-39"><a href="#cb3-39"></a>    res &lt;-<span class="st"> </span><span class="kw">concRespCore</span>(row,<span class="dt">fitmodels =</span> <span class="kw">c</span>(<span class="st">&quot;cnst&quot;</span>, <span class="st">&quot;hill&quot;</span>, <span class="st">&quot;gnls&quot;</span>, <span class="st">&quot;poly1&quot;</span>, <span class="st">&quot;poly2&quot;</span>, <span class="st">&quot;pow&quot;</span>, <span class="st">&quot;exp2&quot;</span>, <span class="st">&quot;exp3&quot;</span>,</span>
+<span id="cb3-40"><a href="#cb3-40"></a>                                          <span class="st">&quot;exp4&quot;</span>, <span class="st">&quot;exp5&quot;</span>),<span class="dt">conthits =</span> T, <span class="dt">aicc =</span> F,<span class="dt">bidirectional=</span>F)</span>
+<span id="cb3-41"><a href="#cb3-41"></a></span>
+<span id="cb3-42"><a href="#cb3-42"></a>    <span class="co"># plot the results</span></span>
+<span id="cb3-43"><a href="#cb3-43"></a>    <span class="kw">concRespPlot</span>(res<span class="op">$</span>summary,<span class="dt">ymin=</span><span class="op">-</span><span class="dv">10</span>,<span class="dt">ymax=</span><span class="dv">100</span>)</span>
+<span id="cb3-44"><a href="#cb3-44"></a>  }</span>
+<span id="cb3-45"><a href="#cb3-45"></a></span></code></pre></div>
+<p>One would typically save the <code>summary</code> rows in a data frame end export these for further analysis. You could remove the plotting function from the current loop and have a loop that read from the overall results data frame and only plot selected results (e.g. those with significant responses).</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
