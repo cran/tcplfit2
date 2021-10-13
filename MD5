@@ -1,7 +1,7 @@
-0dce3cfe3c9d39dacfcd47f56cbf85c3 *DESCRIPTION
+a04ccaa0a70cdc14ce9d48e38af7c97e *DESCRIPTION
 289a43dbd26f34029e8124e1ef09ae25 *LICENSE
 801b431a323ade18c04210f6f47e62e9 *NAMESPACE
-2a77e2d1eac1f1341463b9f66b1dd3c6 *NEWS.md
+66c436c13b388aa867209f22de54f8b1 *NEWS.md
 a652eb875c3011f4329d9e5f10e24c42 *R/acy.R
 f3da4bdafa46e8f74d68c356ed18f47e *R/bmdbounds.R
 68f938ea844f508222c1dc734c5ebb32 *R/bmdobj.R
@@ -29,13 +29,13 @@ c31b5e0b6838e6926716bd370ae2e5ba *R/tcplObj.R
 23a76d0ca8d7e8a546e74cf6f36fafcf *R/tcplhit2_core.R
 1047a6aed734d6ed50530d6a3723ec4b *R/toplikelihood.R
 1724ce73fdc9f14b39d7db62cb240cf9 *README
-787ddc92501d9eee9cb0966121c331ba *build/partial.rdb
+01ac5e8c8d239f4c3ea26fc4844307af *build/partial.rdb
 388f99df578c56455a2bd6f481050293 *build/vignette.rds
 c0cf355a6272e4120894bd7103723244 *data/mc3.RData
 bb9cc028aaa9453e6451d726f664fd65 *data/signatures.rda
-7a72f995cbf68cfe3f042bca4323bc77 *inst/doc/tcplfit2-vignette.R
-0feb6193c86f7efad0f33a2d3288b6f7 *inst/doc/tcplfit2-vignette.Rmd
-b71fb00391dd4f0f41062bebe37581a4 *inst/doc/tcplfit2-vignette.html
+1ba5aa0b60ba6f4d494a35575e12017a *inst/doc/tcplfit2-vignette.R
+b095341068978ae6590e58797b11323d *inst/doc/tcplfit2-vignette.Rmd
+88bbb6454d6369c1e6cd196a38c226ff *inst/doc/tcplfit2-vignette.html
 6e505e95b1d36375ee794ae0ab347ace *man/acgnlsobj.Rd
 1fb9e2fcf3174e5c0a24a9609089879e *man/acy.Rd
 e30c28806ef37cba2ab01d0eba7c37dd *man/bmdbounds.Rd
@@ -76,5 +76,4 @@ a64f7e2b620b009e9897afe40cb9c242 *man/tcplObj.Rd
 b8efc6d99090380fe9ac200d46d83fb2 *man/tcplfit2_core.Rd
 bd4bfb16515d2d4c20bf854fca0b4254 *man/tcplhit2_core.Rd
 ade9ae11167520e5a0753a491760fd62 *man/toplikelihood.Rd
-0feb6193c86f7efad0f33a2d3288b6f7 *vignettes/tcplfit2-vignette.Rmd
-e6fb613063808ee46c615a4f5fb4da6d *vignettes/tcplfit2-vignette.docx
+b095341068978ae6590e58797b11323d *vignettes/tcplfit2-vignette.Rmd
