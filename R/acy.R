@@ -8,7 +8,7 @@
 #' gnls model. gnls model defaults to giving concentration on gain side. Only
 #' one of getloss, returntop, and returntoploc should be TRUE at a time.  If
 #' top location solution fails for gnls, top is set to tp. Returns NA if gnls
-#' numerical solver fails.
+#' numerical solver fails. Returns NA if model was not successfully fit.
 #'
 #' @param y Activity value at which the concentration is desired. y
 #'   should be less than the model's top, if there is one, and greater
@@ -44,18 +44,27 @@
 #'
 acy <- function(y, modpars, type = "hill", returntop = FALSE, returntoploc = FALSE, getloss =FALSE, verbose = FALSE) {
   #variable binding to pass cmd checks
-  a <- b <- tp <- ga <- p <- q <- la <- NULL
+  a <- b <- tp <- ga <- p <- q <- la <- success <- top <- NULL
   #Put model parameters in environment: a,b,tp,ga,p,q,la,er
   list2env(modpars, envir = environment())
 
   #warnings
+  if(!is.null(success)){
+    if(success == 0){
+      return(NA)
+    }
+  }
   if(!returntop){
     if(!is.null(modpars$tp) && abs(y) >= abs(tp)) {
-      if(verbose) warning("y is greater than top in function acy, returning NA")
+      if(verbose) warning("y (specified activity response) is greater than tp in function acy, returning NA")
+      return(NA)
+    }
+    if(!is.null(modpars$top) && abs(y) >= abs(top)) {
+      if(verbose) warning("y (specified activity response) is greater than top in function acy, returning NA")
       return(NA)
     }
     if(!is.null(modpars$tp) && sign(y) != sign(tp)) {
-      if(verbose) warning("y is wrong sign in function acy, returning NA")
+      if(verbose) warning("y (specified activity response) is wrong sign in function acy, returning NA")
       return(NA)
     }
   }
@@ -83,7 +92,7 @@ acy <- function(y, modpars, type = "hill", returntop = FALSE, returntoploc = FAL
     toploc = try(uniroot(gnlsderivobj, c(ga,la), tp = tp, ga = ga, p = p, la = la, q = q, tol = 1e-8)$root)
 
     #If toploc fails, set topval to tp, set toploc to NA
-    if(class(toploc) == "try-error"){
+    if(is(toploc,"try-error")){
       if(verbose) warning("toploc could not be found numerically")
       topval = tp
       toploc = NA_real_
@@ -107,7 +116,7 @@ acy <- function(y, modpars, type = "hill", returntop = FALSE, returntoploc = FAL
     } else {
       output = try(uniroot(acgnlsobj, c(1e-8, toploc), y = y, tp = tp, ga = ga, p = p, la = la, q = q, tol = 1e-8)$root)
     }
-    if(class(output) == "try-error") return(NA_real_) else return(output)
+    if(is(output,"try-error")) return(NA_real_) else return(output)
   }
 
   return(NA)

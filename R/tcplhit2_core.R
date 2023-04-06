@@ -59,7 +59,8 @@
 #'     \item ac5 - curve value at 5\% of top
 #'     \item ac10 - curve value at 10\% of top
 #'     \item ac20 - curve value at 20\% of top
-#'     \item acc - curve value at 1 standard deviation
+#'     \item acc - curve value at cutoff
+#'     \item ac1sd - curve value at 1 standard deviation
 #'     \item conc - conc string separated by |'s
 #'     \item resp - response string separated by |'s
 #'   }
@@ -121,7 +122,6 @@ tcplhit2_core <- function(params, conc, resp, cutoff, onesd,bmr_scale = 1.349, b
       list2env(fitout, envir = environment()) # put all parameters in environment
     }
   }
-
   n_gt_cutoff <- sum(abs(resp) > cutoff)
 
   # compute discrete or continuous hitcalls
@@ -137,6 +137,11 @@ tcplhit2_core <- function(params, conc, resp, cutoff, onesd,bmr_scale = 1.349, b
     hitcall <- hitloginner(conc, resp, top, cutoff, ac50)
   }
 
+  if(is.nan(hitcall)){
+    hitcall <- 0
+  }
+
+
   bmr <- onesd * bmr_scale # magic bmr is default 1.349
   if (hitcall > 0) {
 
@@ -144,7 +149,7 @@ tcplhit2_core <- function(params, conc, resp, cutoff, onesd,bmr_scale = 1.349, b
     ac5 <- acy(.05 * top, modpars, type = fit_method) # note: cnst model automatically returns NAs
     ac10 <- acy(.1 * top, modpars, type = fit_method)
     ac20 <- acy(.2 * top, modpars, type = fit_method)
-    acc <- acy(sign(top) * cutoff, modpars, type = fit_method)
+    acc <- acy(sign(top) * cutoff, c(modpars,top = top), type = fit_method)
     ac1sd <- acy(sign(top) * onesd, modpars, type = fit_method)
     bmd <- acy(sign(top) * bmr, modpars, type = fit_method)
 

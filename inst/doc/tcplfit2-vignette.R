@@ -1,13 +1,13 @@
-## ---- include = FALSE----------------------------------------------------
+## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 
-## ----setup---------------------------------------------------------------
+## ----setup--------------------------------------------------------------------
 library(tcplfit2)
 
-## ----example1, fig.height = 7, fig.width = 7-----------------------------
+## ----example1, fig.height = 7, fig.width = 7----------------------------------
   conc <- list(.03,.1,.3,1,3,10,30,100)
   resp <- list(0,.2,.1,.4,.7,.9,.6, 1.2)
   row = list(conc = conc, resp = resp, bmed = 0, cutoff = 1, onesd = .5,name="some chemical")
@@ -15,7 +15,7 @@ library(tcplfit2)
                                         "exp4", "exp5"),conthits = T, do.plot=T)
   
 
-## ----example2, fig.height = 8, fig.width = 7, eval = FALSE---------------
+## ----example2, fig.height = 8, fig.width = 7, eval = FALSE--------------------
 #    # read in the data
 #    file <- "data/mc3.RData"
 #    load(file=file)
@@ -62,7 +62,7 @@ library(tcplfit2)
 #  
 #  
 
-## ----example3, fig.height = 6, fig.width = 7-----------------------------
+## ----example3, fig.height = 6, fig.width = 7----------------------------------
   # call additional R packages
   library(stringr)  # string management package
 
@@ -93,7 +93,7 @@ library(tcplfit2)
     }
   }
 
-## ----example3_plot2, fig.height = 8, fig.width = 7-----------------------
+## ----example3_plot2, fig.height = 8, fig.width = 7----------------------------
   # set up a 3 x 2 grid for the plots
   oldpar <- par(no.readonly = TRUE)
   on.exit(par(oldpar))            
