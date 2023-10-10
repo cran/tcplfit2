@@ -29,20 +29,20 @@ will be positive only.}
 log10 units).}
 }
 \value{
-Named list containing: success, aic (Aikaike Information Criteria),
+Named list containing: success, aic (Akaike Information Criteria),
   cov (success of covariance calculation), rme (root mean square error),
   modl (vector of model values at given concentrations),
   parameters values, parameter sd (standard deviation) estimates, pars
   (vector of parameter names), sds (vector of parameter sd names).
 }
 \description{
-Function that fits to f(x) = tp/[(1 + (ga/x)^p )(1 + (x/la)^q )]
+Function that fits to \eqn{f(x) = \frac{tp}{[(1 + (ga/x)^p )(1 + (x/la)^q )]}}
 and returns generic model outputs.
 }
 \details{
 Concentrations are converted internally to log10 units and optimized with
-f(x) = tp/[(1 + 10^(p*(ga-x)) )(1 + 10^(q*(x-la)) )], then ga, la, ga_sd,
-and la_sd are converted back to regular units before returning.
+\eqn{f(x) = \frac{tp}{[(1 + 10^{(p*(ga-x))} )(1 + 10^{(q*(x-la))} )]}},
+then ga, la, ga_sd, and la_sd are converted back to regular units before returning.
 Zero background and increasing initial absolute response are assumed.
 Parameters are "tp" (top), "ga" (gain AC50), "p" (gain power), "la"
 (loss AC50),"q" (loss power) and error term "er".

@@ -28,14 +28,14 @@ will be positive only.}
 \item{nmin}{Minimum allowed value of p.}
 }
 \value{
-Named list containing: success, aic (Aikaike Information Criteria),
+Named list containing: success, aic (Akaike Information Criteria),
   cov (success of covariance calculation), rme (root mean square error),
   modl (vector of model values at given concentrations),
   parameters values, parameter sd (standard deviation) estimates, pars
   (vector of parameter names), sds (vector of parameter sd names).
 }
 \description{
-Function that fits tof(x) = a*x^p and returns generic model outputs.
+Function that fits to \eqn{f(x) = a*x^p} and returns generic model outputs.
 }
 \details{
 Zero background and monotonically increasing absolute response are assumed.

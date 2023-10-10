@@ -28,14 +28,14 @@ will be positive only.}
 \item{dmin}{Minimum allowed value of p.}
 }
 \value{
-Named list containing: success, aic (Aikaike Information Criteria),
+Named list containing: success, aic (Akaike Information Criteria),
   cov (success of covariance calculation), rme (root mean square error),
   modl (vector of model values at given concentrations),
   parameters values, parameter sd (standard deviation) estimates, pars
   (vector of parameter names), sds (vector of parameter sd names).
 }
 \description{
-Function that fits to f(x) = a*(e^((x/b)^p)- 1) and returns generic model
+Function that fits to \eqn{f(x) = a*(e^{(x/b)^p} - 1)} and returns generic model
 outputs.
 }
 \details{

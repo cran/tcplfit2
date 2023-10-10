@@ -1,6 +1,6 @@
 #' Polynomial 1 (Linear) Model Fit
 #'
-#' Function that fits to f(x) = a*x and returns generic model outputs.
+#' Function that fits to \eqn{f(x) = a*x} and returns generic model outputs.
 #'
 #' Zero background and increasing absolute response are assumed. Parameters are
 #' "a" (y scale) and error term "er".
@@ -20,7 +20,7 @@
 #' @importFrom numDeriv hessian
 #' @importFrom stats constrOptim median
 #'
-#' @return Named list containing: success, aic (Aikaike Information Criteria),
+#' @return Named list containing: success, aic (Akaike Information Criteria),
 #'   cov (success of covariance calculation), rme (root mean square error),
 #'   modl (vector of model values at given concentrations),
 #'   parameters values, parameter sd (standard deviation) estimates, pars
