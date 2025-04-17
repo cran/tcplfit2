@@ -4,10 +4,11 @@ list(my_css = "css/rmdformats.css")
 ## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.align = 'center'
 )
 
-## ----setup, class.source="scroll-100", warning = FALSE, message = FALSE-------
+## ----setup,class.source="fold-show",warning = FALSE, message = FALSE----------
 # Primary Packages #
 library(tcplfit2)
 library(tcpl)
@@ -21,13 +22,13 @@ library(stringr)
 library(ggplot2)
 library(gridExtra)
 
-## ----example1, warning=FALSE--------------------------------------------------
+## ----ex1_concRespCore,class.source="fold-show",warning=FALSE------------------
 # tested concentrations
   conc <- list(.03,.1,.3,1,3,10,30,100)
 # observed responses at respective concentrations
   resp <- list(0,.2,.1,.4,.7,.9,.6, 1.2)
 # row object with relevant parameters
-  row = list(conc = conc, resp = resp, bmed = 0, cutoff = 1, onesd = .5,name="some chemical")
+  row = list(conc = conc,resp = resp,bmed = 0,cutoff = 1,onesd = 0.5,name="some chemical")
 # execute concentration-response modeling through potency estimation
   res <- concRespCore(row,
                       fitmodels = c("cnst", "hill", "gnls",
@@ -42,29 +43,39 @@ htmlTable::htmlTable(head(res),
         rnames = FALSE  ,
         css.cell =  ' padding-bottom: 5px;  vertical-align:top; padding-right: 10px;min-width: 5em ')
 
-## ----example1 plot, fig.height = 4.55, fig.width = 8--------------------------
+## ----ex1_concRespPlot2, fig.height = 4.55, fig.width = 8----------------------
 # plot the winning curve from example 1, add a title
 concRespPlot2(res, log_conc = TRUE) + ggtitle("Example 1: Chemical A")
 
-## ----example2_load, warning=FALSE---------------------------------------------
+## ----example2,class.source="fold-show",warning=FALSE--------------------------
 # read in the data
-# Loading in the level 3 example data set from invitrodb
+# Loading in the level 3 example data set from invitrodb stored in tcplfit2
   data("mc3")
+
+# view the first 6 rows of the mc3 data
+# dtxsid = unique chemical identifier from EPA's DSSTox Database 
+# casrn = unique chemical identifier from Chemical Abstracts Service 
+# name = chemical name 
+# spid = sample id 
+# logc = log_10 concentration value 
+# resp = response 
+# assay = assay name 
   head(mc3)
 
-## ----example2, warning=FALSE--------------------------------------------------
-# determine the background variation
-# chosen as logc <= -2 in this example but will be assay/application specific
-  temp <- mc3[mc3$logc<= -2,"resp"]
-  bmad <- mad(temp)
-  onesd <- sd(temp)
-  cutoff <- 3*bmad
+# estimate the background variability
+# assume the two lowest concentrations (logc <= -2) for baseline in this example
+# Note: The baseline may be assay/application specific
+  temp <- mc3[mc3$logc<= -2,"resp"] # obtain response in the two lowest concentrations
+  bmad <- mad(temp) # obtain the baseline median absolute deviation
+  onesd <- sd(temp) # obtain the baseline standard deviation
+  cutoff <- 3*bmad  # estimate the cutoff, use the typical cutoff=3*BMAD
 
-# select six chemical samples. Note that there may be more than one sample processed for a given chemical
+# select six chemical samples
+# Note: there may be more than one sample processed for a given chemical
   spid.list <- unique(mc3$spid)
   spid.list <- spid.list[1:6]
   
-# create empty objects to store results and plots
+# create empty objects to store fitting results and plots
   model_fits <- NULL
   result_table <- NULL
   plt_lst <- NULL
@@ -74,8 +85,8 @@ concRespPlot2(res, log_conc = TRUE) + ggtitle("Example 1: Chemical A")
     # select the data for just this sample
     temp <- mc3[is.element(mc3$spid,spid),]
 
-    # The data file stores concentrations in log10 units, so back-transform
-    conc <- 10**temp$logc
+    # The data file stores concentrations in log10 units, so back-transform to "raw scale"
+    conc <- 10^temp$logc
     # Save the response values
     resp <- temp$resp
 
@@ -109,19 +120,19 @@ concRespPlot2(res, log_conc = TRUE) + ggtitle("Example 1: Chemical A")
     result_table <- rbind(result_table,out)
   }
 
-
 ## ----example 2 fit results----------------------------------------------------
 # shows the structure of the output object from tcplfit2_core (only top level)
 str(model_fits[[1]],max.lev = 1)
 
-## -----------------------------------------------------------------------------
+## ----hill_model_fit_str-------------------------------------------------------
+# structure of the model fit list - hill model results
 str(model_fits[[1]][["hill"]])
 
 ## ----example2 plot1, fig.height = 9, fig.width = 7----------------------------
 grid.arrange(grobs=plt_lst,ncol=2)
 
-## -----------------------------------------------------------------------------
-htmlTable::htmlTable(head(result_table),
+## ----echo=FALSE---------------------------------------------------------------
+htmlTable::htmlTable(result_table,
         align = 'l',
         align.header = 'l',
         rnames = FALSE  ,
@@ -130,6 +141,7 @@ htmlTable::htmlTable(head(result_table),
 ## ----example2 plot2-----------------------------------------------------------
 # plot the first row
 concRespPlot2(result_table[1,],log_conc = TRUE) + 
+  # add a descriptive title to the plot
   ggtitle(paste(result_table[1,"dtxsid"], result_table[1,"name"]))
 
 ## ----example3_init, fig.height = 6, fig.width = 7, message=FALSE, warning = FALSE----
@@ -139,6 +151,7 @@ data.table::setDTthreads(2)
 dat <- mc0
 
 ## ----echo=FALSE---------------------------------------------------------------
+# only show the top 6 rows for the treatment samples
 htmlTable::htmlTable(head(dat[wllt=='t',]),
         align = 'l',
         align.header = 'l',
@@ -152,8 +165,9 @@ setkeyv(dat, c('acid', 'srcf', 'apid', 'coli', 'rowi', 'spid', 'conc'))
 # Define a temporary replicate ID (rpid) column for test compound wells
 # rpid consists of the sample ID, well type (wllt), source file, assay plate ID, and 
 # concentration.
+# the := operator is a data.table function to add/update rows 
 nconc <- dat[wllt == "t" , ## denotes test well as the well type (wllt)
-             list(n = lu(conc)), #total number of unique concentrations
+             list(n = lu(conc)), # total number of unique concentrations
              by = list(acid, apid, spid)][ , list(nconc = min(n)), by = acid]
 dat[wllt == "t" & acid %in% nconc[nconc > 1, acid],
     rpid := paste(acid, spid, wllt, srcf, apid, "rep1", conc, sep = "_")]
@@ -173,11 +187,7 @@ dat[, rpid := paste0(rpid,"_rep",dat_rpid)]
 # For each replicate, define concentration index
 # by ranking the unique concentrations
 indexfunc <- function(x) as.integer(rank(unique(x))[match(x, unique(x))])
-# the := operator is a data.table function to add/update rows
 dat[ , cndx := indexfunc(conc), by = list(rpid)]
-
-## ----echo=FALSE---------------------------------------------------------------
-# tcplConf(user="_dataminer", pass="pass", db="invitrodb", drvr="MySQL", host="ccte-mysql-res.epa.gov")
 
 ## ----example3_mc2, fig.height = 6, fig.width = 7------------------------------
 # If no adjustments are required for the data, the corrected value (cval) should be set as original rval
@@ -196,7 +206,7 @@ htmlTable::htmlTable(head(tcpl::tcplMthdList(3)),
         rnames = FALSE  ,
         css.cell =  ' padding-bottom: 5px;  vertical-align:top; padding-right: 10px;min-width: 5em ')
 
-## ----example3 normalize-------------------------------------------------------
+## ----example3_normalize-------------------------------------------------------
 # calculate bval of the median of all the wells that have a type of n
 dat[, bval := median(cval[wllt == "n"]), by = list(apid)]
 # calculate pval based on the wells that have type of m or o excluding any NA wells
@@ -218,7 +228,7 @@ htmlTable::htmlTable(head(tcpl::tcplMthdList(4)),
 bmad <- mad(dat[cndx %in% c(1, 2) & wllt == "t", resp])
 onesd <- sd(dat[cndx %in% c(1, 2) & wllt == "t", resp])
 
-## ----example3_fitting, fig.height = 6, fig.width = 7--------------------------
+## ----example3_fitting,class.source="fold-show"--------------------------------
 #do tcplfit2 fitting
 myfun <- function(y) {
   res <- tcplfit2::tcplfit2_core(y$conc,
@@ -234,17 +244,175 @@ myfun <- function(y) {
   list(list(res)) #use list twice because data.table uses list(.) to look for values to assign to columns
 }
 
-## ----example3_fitting_full, eval=FALSE, echo = FALSE--------------------------
+## ----example3_fitting_full, eval=FALSE----------------------------------------
 #  # only want to run tcplfit2 for test wells in this case
 #  # this chunk doesn't run, fit the curves on the subset below
 #  dat[wllt == 't',params:= myfun(.SD), by = .(spid)]
 
-## ----example3_fitting_subset--------------------------------------------------
+## ----example3_fitting_subset,class.source="fold-show"-------------------------
 # create a subset that contains 6 samples and run curve fitting
 subdat <- dat[spid %in% unique(spid)[10:15],]
 subdat[wllt == 't',params:= myfun(.SD), by = .(spid)]
 
-## ----example3_hitcalling, fig.height = 6, fig.width = 7-----------------------
+## ----hitc_plots,fig.height = 6, fig.width = 7,warning=FALSE,message=FALSE-----
+#### Data Set-Up ####
+# obtain the base example data
+DATA_CASE <- tcplfit2::signatures[1,]
+conc <- strsplit(DATA_CASE[,"conc"],split = "[|]") %>% 
+  unlist() %>% as.numeric()
+resp <- strsplit(DATA_CASE[,"resp"],split = "[|]") %>% 
+  unlist() %>% as.numeric()
+OG_data <- data.frame(xval = conc,yval = resp) %>%
+  # obtain the concentrations that are outside the cutoff band
+  dplyr::mutate(type = ifelse(abs(resp)>=abs(DATA_CASE[,"cutoff"]),"Extreme Responses",NA)) %>% 
+  mutate(.,df = "OG_data")
+
+# obtain the fit and best fitting/hitcalling information
+fit <- tcplfit2::tcplfit2_core(conc = conc,resp = resp,
+                               cutoff = DATA_CASE[,"cutoff"])
+hit <- tcplfit2::tcplhit2_core(params = fit,
+                               conc = conc,resp = resp,
+                               cutoff = DATA_CASE[,"cutoff"],
+                               onesd = DATA_CASE[,"onesd"])
+# obtain the continuous curve from fit information
+XC <- seq(from = min(conc),to = max(conc),length.out = 100)
+YC <- tcplfit2::exp4(x = XC,ps = unlist(fit$exp4[fit$exp4$pars]))
+# set up a continuous curve dataset
+cont_fit <-
+  # best fit
+  data.frame(xval = XC,yval = YC,type = "Best Fit") %>%
+  # constant (flat) fit
+  rbind.data.frame(data.frame(xval = XC,yval = rep(0,length(XC)),type = "Constant Fit"))
+
+## prop weight 3 - continuous curve dataset addition ##
+# set up temporary data needed for re-scaling plot
+tmp_cutoff <- DATA_CASE[,"cutoff"] # cutoff value
+tmp_top <- fit$exp4$top # maximal predicted response from baseline
+tmp_ps  <- unlist(fit$exp4[fit$exp4$pars]) # model parameters
+# code from toplikelihood.R lines 51-56 for the "exp4" model
+if (tmp_top == tmp_ps[1]) { # check if the top and tp are the same
+  tmp_ps[1] = tmp_cutoff
+} else {
+  x_top = acy(y = tmp_top, modpars = list(tp=tmp_ps[1],ga=tmp_ps[2],er=tmp_ps[3]),type="exp4")
+  tmp_ps[1] = tmp_cutoff/( 1 - 2^(-x_top/tmp_ps[2]))
+}
+# obtain the rescaled predicted response
+YC_rescale <- tcplfit2::exp4(x = XC,ps = tmp_ps)
+# add the continuous rescaled curve to the continuous curve dataset
+cont_fit <- rbind.data.frame(
+  cont_fit,
+  data.frame(xval = XC,yval = YC_rescale,type = "Rescaled Best Fit")
+) %>% mutate(.,df = "cont_fit")
+
+# dataset with reference lines (e.g. cutoff, bmr, top, etc.)
+ref_df <- data.frame(
+  xval = rep(0,6),
+  yval = c(hit$cutoff*c(-1,1),
+           hit$bmr*c(-1,1),
+           fit$exp4$top,
+           hit$cutoff),
+  type = c(rep("Cutoff",2),rep("BMR",2),"Top","Top at Cutoff")
+) %>% mutate(.,df = "ref_df")
+
+## plotting dataframe combined
+plot_highlight_df <- rbind.data.frame(OG_data,cont_fit,ref_df)
+
+#### Generate Plots ####
+## Generate a Base Plot for the Concentration-Response ##
+base_plot <- ggplot2::ggplot()+
+  geom_point(data = dplyr::filter(plot_highlight_df,df == "OG_data"),
+             aes(x = log10(xval),y = yval))+
+  geom_line(data = dplyr::filter(plot_highlight_df,df == "cont_fit" & type == "Best Fit"),
+             aes(x = log10(xval),y = yval))+
+  geom_hline(data = dplyr::filter(plot_highlight_df,df == "ref_df" & type %in% c("Cutoff","BMR")),
+             aes(yintercept = yval,linetype = type,colour = type))+
+  ggplot2::ylim(c(-1,1))+
+  scale_colour_manual(breaks = c("Cutoff","BMR"),values = rep("black",2))+
+  scale_linetype_manual(breaks = c("Cutoff","BMR"),values = c("dashed","dotted"))+
+  theme_bw()+
+  theme(axis.title.x = element_blank(),axis.title.y = element_blank())
+
+## Proportional Weight 1 Plot ##
+p1_plot <- base_plot+
+  # add a title for the subplot
+  ggplot2::ggtitle("p1",subtitle = "AIC Weight")+
+  # add the constant (reference) and winning model (comparison) - highlighted
+  geom_line(data = dplyr::filter(plot_highlight_df,df == "cont_fit" & type != "Rescaled Best Fit"),
+             aes(x = log10(xval),y = yval,colour = type,linetype = type))+
+  scale_colour_manual(name = "",
+                      breaks = c("Constant Fit","Best Fit","Cutoff","BMR"),
+                      values = c("blue","red",rep("black",2)))+
+  scale_linetype_manual(name = "",
+                        breaks = c("Constant Fit","Best Fit","Cutoff","BMR"),
+                        values = c("solid","solid","dashed","dotted"))+
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.5,0.15),
+        legend.key.size = unit(0.5,"cm"),
+        legend.text = element_text(size = 7),
+        legend.title = element_blank(),
+        legend.background = element_rect(fill = alpha("lemonchiffon",0.5)))
+
+## Proportional Weight 2 Plot ##
+p2_plot <- base_plot+
+  # add a title for the subplot
+  ggplot2::ggtitle("p2",subtitle = "Responses Outside Cutoff")+
+  # add the concentrations with median responses outside the cutoff band - highlighted
+  geom_point(data = dplyr::filter(plot_highlight_df,df == "OG_data" & type == "Extreme Responses"),
+             aes(x = log10(xval),y = yval,shape = type),col = "red")+
+  # add the cutoff band - highlighted
+  geom_hline(data = dplyr::filter(plot_highlight_df,df == "ref_df" & type %in% c("Cutoff","BMR")),
+             aes(yintercept = yval,linetype = type,colour = type))+
+  scale_colour_manual(name = "",
+                     breaks = c("Cutoff","BMR"),
+                     values = c("blue","black"))+
+  scale_linetype_manual(name = "",
+                        breaks = c("Cutoff","BMR"),
+                        values = c("dashed","dotted"))+
+  scale_shape(name = "")+
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.5,0.15),
+        legend.key.size = unit(0.5,"cm"),
+        legend.spacing.y = unit(-4,"lines"),
+        legend.text = element_text(size = 7),
+        legend.title = element_blank(),
+        legend.background = element_rect(fill = alpha("lemonchiffon",0.5)))
+
+## Proportional Weight 3 Plot ##
+p3_plot <- base_plot+
+  # add a title for the subplot
+  ggplot2::ggtitle("p3",subtitle = "Top Likelihood Ratio")+
+  # add the original predicted curve & the re-scaled predicted curve - highlighted
+  ggplot2::geom_line(data = dplyr::filter(plot_highlight_df,df == "cont_fit" & type != "Constant Fit"),
+                     aes(x = log10(xval),y = yval,colour = type,linetype = type))+
+  # add the 'top' (maximal predicted change in response from baseline) & the cutoff band - highlighted
+  ggplot2::geom_hline(data = dplyr::filter(plot_highlight_df,df == "ref_df"),
+                      aes(yintercept = yval,colour = type,linetype = type))+
+  scale_linetype_manual(name = "",
+                        breaks = c("Best Fit","Rescaled Best Fit","Cutoff","BMR","Top","Top at Cutoff"),
+                        values = c(rep("solid",2),"dashed","dotted",rep("dashed",2)))+
+  scale_colour_manual(name = "",
+                      breaks = c("Best Fit","Rescaled Best Fit","Cutoff","BMR","Top","Top at Cutoff"),
+                      values = c("blue","red",rep("black",2),"skyblue","hotpink"))+
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.5,0.175),
+        legend.key.size = unit(0.5,"cm"),
+        legend.text = element_text(size = 7),
+        legend.title = element_blank(),
+        legend.background = element_rect(fill = alpha("lemonchiffon",0.5)))
+
+## All Plots ##
+grid.arrange(p1_plot,p2_plot,p3_plot,
+             ncol = 3,
+             top = paste(DATA_CASE[,"signature"],DATA_CASE[,"dtxsid"],sep = "\n"),
+             left = "response",
+             bottom = paste("log10(conc)",
+                            paste(paste("hitc:",signif(hit[,"hitcall"],3)),
+                                  paste("log10(bmd):",signif(log10(hit[,"bmd"]),3)),sep = ", "),
+                            sep = "\n")
+             )
+
+## ----example3_hitcalling------------------------------------------------------
+#do tcplfit2 hitcalling
 myfun2 <- function(y) {
   res <- tcplfit2::tcplhit2_core(params = y$params[[1]],
                                  conc = y$conc,
@@ -261,6 +429,8 @@ res <- subdat[wllt == 't', myfun2(.SD), by = .(spid)]
 # pivot wider
 res_wide <- rbindlist(Map(cbind, spid = res$spid, res$V1))
 
+# add a binary hitcall column to the data
+res_wide[,hitb := ifelse(hitcall >= 0.9,1,0)]
 
 ## ----echo=FALSE---------------------------------------------------------------
 htmlTable::htmlTable(head(res_wide),
@@ -279,7 +449,7 @@ htmlTable::htmlTable(head(res_wide),
 # compile and display winning model plots for concentration-response series
   grid.arrange(grobs=plt_list,ncol=2)
 
-## ----example 4 lower, warning=FALSE-------------------------------------------
+## ----ex4_lower,warning=FALSE--------------------------------------------------
 # We'll use data from mc3 in this section
 data("mc3")
 
@@ -317,31 +487,34 @@ row_low <- list(conc = conc2, resp = resp2, bmed = 0, cutoff = cutoff, onesd = o
 res_low <- concRespCore(row_low,fitmodels = c("cnst", "hill", "gnls", "poly1", "poly2", 
                                           "pow", "exp2", "exp3", "exp4", "exp5"), 
                         bidirectional=F)
-
+# plotting the results
+min_conc <- min(conc2)
 concRespPlot2(res_low, log_conc = T) + 
+  geom_vline(aes(xintercept = log10(min_conc)),lty = "dashed")+
   geom_rect(aes(xmin = log10(res_low[1, "bmdl"]),
                 xmax = log10(res_low[1, "bmdu"]),ymin = 0,ymax = 30),
             alpha = 0.05,fill = "skyblue") + 
   geom_segment(aes(x = log10(res_low[, "bmd"]),
                    xend = log10(res_low[, "bmd"]), y = 0, 
-                   yend = 30),col = "blue")
+                   yend = 30),col = "blue")+
+  ggtitle(label = paste(name,"-",assay),subtitle = dtxsid)
 
-## ----example 4 lower-res------------------------------------------------------
+## ----ex4_lower-res------------------------------------------------------------
 # function results
 res_low['Min. Conc.'] <- min(conc2)
 res_low['Name'] <- name
 res_low[1, c("Min. Conc.", "bmd", "bmdl", "bmdu")] <- round(res_low[1, c("Min. Conc.", "bmd", "bmdl", "bmdu")], 3)
 
-## ----example_4_table, echo=FALSE----------------------------------------------
+## ----ex4_table, echo=FALSE----------------------------------------------------
 DT::datatable(res_low[1, c("Name","Min. Conc.", "bmd", "bmdl", "bmdu")],rownames = FALSE)
 
-## ----example 4 lower-demo-----------------------------------------------------
+## ----ex4_lower-demo,class.source="fold-show"----------------------------------
 # using the argument to set a lower bound for BMD
 res_low2 <- concRespCore(row_low,fitmodels = c("cnst", "hill", "gnls", "poly1", "poly2", 
                                            "pow", "exp2", "exp3", "exp4", "exp5"), 
-                         conthits = T, aicc = F, bidirectional=F, bmd_low_bnd = 0.8)
+                         bidirectional=F, bmd_low_bnd = 0.8)
 
-## ----example 4 new lower-res--------------------------------------------------
+## ----ex4_lower-res-bnd--------------------------------------------------------
 # print out the new results
 # include previous results side by side for comparison 
 res_low2['Min. Conc.'] <- min(conc2)
@@ -355,10 +528,10 @@ output_low <- rbind(res_low[1, c('Name', "Min. Conc.", "bmd", "bmdl", "bmdu")],
 ## ----example_4_lower_res_table, echo = FALSE----------------------------------
 DT::datatable(output_low,rownames = FALSE)
 
-## ----example 4 lower plot, class.source="scroll-100"--------------------------
-# generate some concentration for the fitted curve 
+## ----ex4_lower-plot-bnd, class.source="scroll-100"----------------------------
+# generate some concentrations for the fitted curve 
 logc_plot <- seq(from=-3,to=2,by=0.05)
-conc_plot <- 10**logc_plot
+conc_plot <- 10^logc_plot
 
 # initiate the plot
 plot(conc2,resp2,xlab="conc (uM)",ylab="Response",xlim=c(0.001,100),ylim=c(-5,60),
@@ -371,25 +544,25 @@ abline(v=res_low2$bmd, lty = 2, col = "darkviolet", lwd = 2)
 # add markers for BMD and its boundaries before `bounding`
 lines(c(res_low$bmd,res_low$bmd),c(0,50),col="green",lwd=2)
 rect(xleft=res_low$bmdl,ybottom=0,xright=res_low$bmdu,ytop=50,col=rgb(0,1,0, alpha = .5), border = NA)
-points(res_low$bmd, 0, pch = "x", col = "green")
+points(res_low$bmd, -0.5, pch = "x", col = "green")
 
 # add markers for BMD and its boundaries after `bounding`
 lines(c(res_low2$bmd,res_low2$bmd),c(0,50),col="blue",lwd=2)
 rect(xleft=res_low2$bmdl,ybottom=0,xright=res_low2$bmdu,ytop=50,col=rgb(0,0,1, alpha = .5), border = NA)
-points(res_low2$bmd, 0, pch = "x", col = "blue")
+points(res_low2$bmd, -0.5, pch = "x", col = "blue")
 
 # add the fitted curve
 lines(conc_plot, exp4(ps = c(res_low$tp, res_low$ga), conc_plot))
 legend(1e-3, 60, legend=c("Lowest Dose Tested", "Boundary", "BMD-before", "BMD-after"),
        col=c("brown", "darkviolet", "green", "blue"), lty=c(1,2,1,1))
 
-## ----example 5 upper----------------------------------------------------------
+## ----ex5_upper,warning=FALSE--------------------------------------------------
 # load example data
 spid <- unique(mc3$spid)[26]
 ex_df <- mc3[is.element(mc3$spid,spid),]
 
 # The data file has stored concentration in log10 form, so fix that
-conc <- 10**ex_df$logc # back-transforming concentrations on log10 scale
+conc <- 10^ex_df$logc # back-transforming concentrations on log10 scale
 resp <- ex_df$resp
 
 # pull out all of the chemical identifiers and the name of the assay
@@ -405,11 +578,21 @@ row_up <- list(conc = conc, resp = resp, bmed = 0, cutoff = cutoff, onesd = ones
 # run the concentration-response modeling for a single sample
 res_up <- concRespCore(row_up,fitmodels = c("cnst", "hill", "gnls", "poly1", "poly2", 
                                          "pow", "exp2", "exp3", "exp4", "exp5"), 
-                       conthits = T, aicc = F, bidirectional=F)
+                       bidirectional=F)
+# plotting the results
+max_conc <- max(conc)
+concRespPlot2(res_up, log_conc = T) + 
+  # geom_vline(aes(xintercept = max(log10(conc))),lty = "dashed")+
+  geom_vline(aes(xintercept = log10(max_conc)),lty = "dashed")+
+  geom_rect(aes(xmin = log10(res_up[1, "bmdl"]),
+                xmax = log10(res_up[1, "bmdu"]),ymin = 0,ymax = 125),
+            alpha = 0.05,fill = "skyblue") + 
+  geom_segment(aes(x = log10(res_up[, "bmd"]),
+                   xend = log10(res_up[, "bmd"]), y = 0, 
+                   yend = 125),col = "blue")+
+  ggtitle(label = paste(name,"-",assay),subtitle = dtxsid)
 
-concRespPlot2(res_up, log_conc = T)
-
-## ----example 5 upper-res------------------------------------------------------
+## ----ex5_upper-res------------------------------------------------------------
 # max conc
 res_up['Max Conc.'] <- max(conc)
 res_up['Name'] <- name
@@ -419,13 +602,13 @@ res_up[1, c("Max Conc.", "bmd", "bmdl", "bmdu")] <- round(res_up[1, c("Max Conc.
 ## ----example_5_table, echo = FALSE--------------------------------------------
 DT::datatable(res_up[1, c('Name','Max Conc.', "bmd", "bmdl", "bmdu")],rownames = FALSE)
 
-## ----example upper-demo-------------------------------------------------------
+## ----ex5_upper-demo,class.source="fold-show"----------------------------------
 # using bmd_up_bnd = 2
 res_up2 <- concRespCore(row_up,fitmodels = c("cnst", "hill", "gnls", "poly1", "poly2", 
                                           "pow", "exp2", "exp3", "exp4", "exp5"), 
-                        conthits = T, aicc = F, bidirectional=F, bmd_up_bnd = 2)
+                        bidirectional=F, bmd_up_bnd = 2)
 
-## ----example upper-2----------------------------------------------------------
+## ----ex5_upper-bnd------------------------------------------------------------
 # print out the new results
 # include previous results side by side for comparison 
 res_up2['Max Conc.'] <- max(conc)
@@ -439,40 +622,40 @@ output_up <- rbind(res_up[1, c('Name', "Max Conc.", "bmd", "bmdl", "bmdu")],
 ## ----example_upper_2_table, echo = FALSE--------------------------------------
 DT::datatable(output_up,rownames = FALSE)
 
-## ----example upper plot, class.source="scroll-100"----------------------------
+## ----ex5_upper-bnd-plot, class.source="scroll-100"----------------------------
 # generate some concentration for the fitting curve 
 logc_plot <- seq(from=-3,to=2,by=0.05)
-conc_plot <- 10**logc_plot
+conc_plot <- 10^logc_plot
 
 # initiate plot
-plot(conc,resp,xlab="conc (uM)",ylab="Response",xlim=c(0.001,500),ylim=c(-5,40),
+plot(conc,resp,xlab="conc (uM)",ylab="Response",xlim=c(0.001,500),ylim=c(-5,150),
        log="x",main=paste(name,"\n",assay),cex.main=0.9)
 # add vertical lines to mark the maximum concentration in the data and the upper boundary set by bmd_up_bnd
 abline(v=max(conc), lty = 1, col = "brown", lwd=2)
 abline(v=160, lty = 2, col = "darkviolet", lwd=2)
 
 # add marker for BMD and its boundaries before `bounding`
-lines(c(res_up$bmd,res_up$bmd),c(0,50),col="green",lwd=2)
-rect(xleft=res_up$bmdl,ybottom=0,xright=res_up$bmdu,ytop=50,col=rgb(0,1,0, alpha = .5), border = NA)
-points(res_up$bmd, 0, pch = "x", col = "green")
+lines(c(res_up$bmd,res_up$bmd),c(0,125),col="green",lwd=2)
+rect(xleft=res_up$bmdl,ybottom=0,xright=res_up$bmdu,ytop=125,col=rgb(0,1,0, alpha = .5), border = NA)
+points(res_up$bmd, -0.5, pch = "x", col = "green")
 
 # add marker for BMD and its boundaries after `bounding`
-lines(c(res_up2$bmd,res_up2$bmd),c(0,50),col="blue",lwd=2)
-rect(xleft=res_up2$bmdl,ybottom=0,xright=res_up2$bmdu,ytop=50,col=rgb(0,0,1, alpha = .5), border = NA)
-points(res_up2$bmd, 0, pch = "x", col = "blue")
+lines(c(res_up2$bmd,res_up2$bmd),c(0,125),col="blue",lwd=2)
+rect(xleft=res_up2$bmdl,ybottom=0,xright=res_up2$bmdu,ytop=125,col=rgb(0,0,1, alpha = .5), border = NA)
+points(res_up2$bmd, -0.5, pch = "x", col = "blue")
 
 # add the fitting curve
 lines(conc_plot, poly1(ps = c(res_up$a), conc_plot))
-legend(1e-3, 40, legend=c("Maximum Dose Tested", "Boundary", "BMD-before", "BMD-after"),
+legend(1e-3, 150, legend=c("Maximum Dose Tested", "Boundary", "BMD-before", "BMD-after"),
        col=c("brown", "darkviolet", "green", "blue"), lty=c(1,2,1,1))
 
-## ----example with hit core----------------------------------------------------
+## ----ex6_hitcore,class.source="fold-show"-------------------------------------
 # using the same data, fit curves 
 param <- tcplfit2_core(conc2, resp2, cutoff = cutoff)
 hit_res <- tcplhit2_core(param, conc2, resp2, cutoff = cutoff, onesd = onesd, 
                          bmd_low_bnd = 0.8)
 
-## ----res-hit core-------------------------------------------------------------
+## ----ex6_hitcore-res----------------------------------------------------------
 # adding the result from tcplhit2_core to the output table for comparison
 hit_res["Name"]<-  paste("Chlorothalonil", "tcplhit2_core", sep = "-")
 hit_res['Min. Conc.'] <- min(conc2)
@@ -481,15 +664,15 @@ hit_res[1, c("Min. Conc.", "bmd", "bmdl", "bmdu")] <- round(hit_res[1, c("Min. C
 output_low <- rbind(output_low, 
                     hit_res[1, c('Name', "Min. Conc.", "bmd", "bmdl", "bmdu")])
 
-## ----res-hit_table, echo = FALSE----------------------------------------------
+## ----ex6_res-hit_table, echo = FALSE------------------------------------------
 DT::datatable(output_low,rownames = FALSE)
 
-## ----example even lower bound-------------------------------------------------
+## ----ex7_lower-bnd,class.source="fold-show"-----------------------------------
 res_low3 <- concRespCore(row_low,fitmodels = c("cnst", "hill", "gnls", "poly1", "poly2", 
                                            "pow", "exp2", "exp3", "exp4", "exp5"), 
                          conthits = T, aicc = F, bidirectional=F, bmd_low_bnd = 0.4)
 
-## ----example even lower bound-res---------------------------------------------
+## ----ex7_lower-bnd-res--------------------------------------------------------
 # print out the new results
 # add to previous results for comparison 
 res_low3['Min. Conc.'] <- min(conc2)
@@ -499,10 +682,10 @@ res_low3[1, c("Min. Conc.", "bmd", "bmdl", "bmdu")] <- round(res_low3[1, c("Min.
 output_low <- rbind(output_low[-3, ], 
                     res_low3[1, c('Name', "Min. Conc.", "bmd", "bmdl", "bmdu")])
 
-## ----lower_bound_res_table, echo = FALSE--------------------------------------
+## ----ex7_lower-bnd-res-table, echo = FALSE------------------------------------
 DT::datatable(output_low,rownames = FALSE)
 
-## ----example even lower bound-plot, class.source="scroll-100"-----------------
+## ----ex7_lower-bnd-plot, class.source="scroll-100"----------------------------
 # initiate the plot
 plot(conc2,resp2,xlab="conc (uM)",ylab="Response",xlim=c(0.001,100),ylim=c(-5,60),
        log="x",main=paste(name,"\n",assay),cex.main=0.9)
@@ -526,54 +709,48 @@ lines(conc_plot, exp4(ps = c(res_low$tp, res_low$ga), conc_plot))
 legend(1e-3, 60, legend=c("Lowest Dose Tested", "Boundary Dose", "BMD-before", "BMD-after"),
        col=c("brown", "darkviolet", "green", "blue"), lty=c(1,2,1,1))
 
-## ----appendix plt1, fig.height = 6, fig.width = 7, warning = FALSE------------
-  # call additional R packages
-  library(stringr)  # string management package
+## ----appendix_plt1, fig.height = 6, fig.width = 7, warning = FALSE------------
+# read in the file
+data("signatures")
 
-  # read in the file
-  data("signatures")
-  
-  # set up a 3 x 2 grid for the plots
-  oldpar <- par(no.readonly = TRUE)
-  on.exit(par(oldpar))            
-  par(mfrow=c(3,2),mar=c(4,4,2,2))
+# set up a 3 x 2 grid for the plots
+oldpar <- par(no.readonly = TRUE)
+on.exit(par(oldpar))            
+par(mfrow=c(3,2),mar=c(4,4,5,2))
     
-  # fit 6 observations in signatures
-  for(i in 1:nrow(signatures)){
-    # set up input data
-    row = list(conc=as.numeric(str_split(signatures[i,"conc"],"\\|")[[1]]),
-               resp=as.numeric(str_split(signatures[i,"resp"],"\\|")[[1]]),
-               bmed=0,
-               cutoff=signatures[i,"cutoff"],
-               onesd=signatures[i,"onesd"],
-               name=signatures[i,"name"],
-               assay=signatures[i,"signature"])
-    # run concentration-response modeling (1st plotting option)
-    out = concRespCore(row,conthits=F,do.plot=T)
-    if(i==1){
-      res <- out
-    }else{
-      res <- rbind.data.frame(res,out)
-    }
+# fit 6 observations in signatures
+for(i in 1:nrow(signatures)){
+  # set up input data
+  row = list(conc=as.numeric(str_split(signatures[i,"conc"],"\\|")[[1]]),
+             resp=as.numeric(str_split(signatures[i,"resp"],"\\|")[[1]]),
+             bmed=0,
+             cutoff=signatures[i,"cutoff"],
+             onesd=signatures[i,"onesd"],
+             name=signatures[i,"name"],
+             assay=signatures[i,"signature"])
+  # run concentration-response modeling (1st plotting option)
+  out = concRespCore(row,conthits=F,do.plot=T)
+  if(i==1){
+    res <- out
+  }else{
+    res <- rbind.data.frame(res,out)
   }
+}
 
 ## ----appendix plt2, fig.height = 8, fig.width = 7-----------------------------
-  # set up a 3 x 2 grid for the plots
-  oldpar <- par(no.readonly = TRUE)
-  on.exit(par(oldpar))            
-  par(mfrow=c(3,2),mar=c(4,4,2,2))
-  # plot results using `concRespPlot`
-  for(i in 1:nrow(res)){
-    concRespPlot(res[i,],ymin=-1,ymax=1)
-  }
+# set up a 3 x 2 grid for the plots
+oldpar <- par(no.readonly = TRUE)
+on.exit(par(oldpar))            
+par(mfrow=c(3,2),mar=c(4,4,2,2))
+# plot results using `concRespPlot`
+for(i in 1:nrow(res)){
+  concRespPlot(res[i,],ymin=-1,ymax=1)
+}
 
 ## -----------------------------------------------------------------------------
 # Load the example data set
 data("signatures")
-# using the first row of signatures data as an example 
-signatures[1,]
 
-## -----------------------------------------------------------------------------
 # using the first row of signature as an example 
 conc <- as.numeric(str_split(signatures[1,"conc"],"\\|")[[1]])
 resp <- as.numeric(str_split(signatures[1,"resp"],"\\|")[[1]])
@@ -584,10 +761,11 @@ output <- tcplfit2_core(conc, resp, cutoff)
 # show the structure of the output 
 summary(output)
 
-## -----------------------------------------------------------------------------
-# get plots in normal and in log-10 concentration scale
+## ----class.source="fold-show",fig.height=8,fig.width=7------------------------
+# get plots in the original and in log-10 concentration scale
 basic <- plot_allcurves(output, conc, resp)
 basic_log <- plot_allcurves(output, conc, resp, log_conc = T)
+# arrange the ggplot2 output into a grid
 grid.arrange(basic, basic_log)
 
 ## -----------------------------------------------------------------------------
@@ -605,11 +783,12 @@ out <-  concRespCore(row,conthits=F)
 # show the output
 out
 
-## -----------------------------------------------------------------------------
+## ----class.source="fold-show"-------------------------------------------------
 # pass the output to the plotting function
 basic_plot <- concRespPlot2(out)
 basic_log <- concRespPlot2(out, log_conc = TRUE)
-res <- grid.arrange(basic_plot, basic_log)
+# arrange the ggplot2 output into a grid
+grid.arrange(basic_plot, basic_log)
 
 ## -----------------------------------------------------------------------------
 # Using the fitted result and plot from the example in the last section
@@ -673,7 +852,7 @@ basic_plot +
                       labels = c("Curve 1-exp4", "Curve 2-exp5")) +
   labs(title = "Curve 1 v.s. Curve 2")
 
-## ----example 1----------------------------------------------------------------
+## ----ex1_AUC,class.source="fold-show"-----------------------------------------
 # some example data
 conc <- list(.03, .1, .3, 1, 3, 10, 30, 100)
 resp <- list(0, .2, .1, .4, .7, .9, .6, 1.2)
@@ -686,18 +865,27 @@ row <- list(conc = conc,
 # AUC is included in the output
 concRespCore(row, conthits = TRUE, AUC = TRUE)
 
-## ----example 2, fig.height = 4.55, fig.width = 8------------------------------
+## ----ex2_AUC, fig.height = 4.55, fig.width = 8--------------------------------
 # This is taken from the example under tcplfit2_core
-conc_ex2 <- c(.03, .1, .3, 1, 3, 10, 30, 100)
-resp_ex2 <- c(0, .1, 0, .2, .6, .9, 1.1, 1)
+conc_ex2 <- c(0.03, 0.1, 0.3, 1, 3, 10, 30, 100)
+resp_ex2 <- c(0, 0.1, 0, 0.2, 0.6, 0.9, 1.1, 1)
 
 # fit all available models in the package
 # show all fitted curves 
-output_ex2 <- tcplfit2_core(conc_ex2, resp_ex2, .8)
+output_ex2 <- tcplfit2_core(conc_ex2, resp_ex2, 0.8)
+# arrange the ggplot2 output into a grid
 grid.arrange(plot_allcurves(output_ex2, conc_ex2, resp_ex2),
-          plot_allcurves(output_ex2, conc_ex2, resp_ex2, log_conc = TRUE), ncol = 2)
+             plot_allcurves(output_ex2, conc_ex2, resp_ex2, log_conc = TRUE),
+             ncol = 2)
 
-## ----example 2 cont., fig.height = 6, fig.width = 6---------------------------
+## ----ex2_AUC_posthit,class.source="fold-show"---------------------------------
+# hitcalling results
+out <- tcplhit2_core(output_ex2, conc_ex2, resp_ex2, 0.8, onesd = 0.4)
+out
+# perform AUC estimation
+post_hit_AUC(out)
+
+## ----ex2_AUC-getAUC,class.source="fold-show"----------------------------------
 fit_method <- "hill"
 # extract the parameters 
 modpars <- output_ex2[[fit_method]][output_ex2[[fit_method]]$pars]
@@ -709,13 +897,15 @@ estimated_auc1
 # extract the predicted responses from the model
 pred_resp <- output_ex2[[fit_method]][["modl"]]
 
+## ----ex2_AUC-getAUC-plot,fig.height = 6, fig.width = 6------------------------
 # plot to see if the result make sense
 # the shaded area is what the function tries to find
-plot(conc_ex2, pred_resp)
+plot(conc_ex2, pred_resp,ylim = c(0,1),
+     xlab = "Concentration",ylab = "Response",main = "Positive Response AUC")
 lines(conc_ex2, pred_resp)
-polygon(c(conc_ex2, max(conc_ex2)), c(pred_resp, min(pred_resp)), col=rgb(1, 0, 0,0.5))
+polygon(c(conc_ex2, max(conc_ex2)), c(pred_resp, min(pred_resp)), col=rgb(1,0,0,0.5))
 
-## ----example 2 other models---------------------------------------------------
+## ----ex2_AUC-other-models-----------------------------------------------------
 # list of models
 fitmodels <- c("gnls", "poly1", "poly2", "pow", "exp2", "exp3", "exp4", "exp5")
 mylist <- list()
@@ -732,11 +922,7 @@ for (model in fitmodels){
 # print AUC's for other models 
 data.frame(mylist,row.names = "AUC")
 
-## ----example 3, fig.height = 4.55, fig.width = 8------------------------------
-# Taking the code from example 3 in the vignette 
-library(stringr)  # string management package
-data("signatures")
-
+## ----ex3_AUC, fig.height = 4.55, fig.width = 8--------------------------------
 # use row 5 in the data
 conc <- as.numeric(str_split(signatures[5,"conc"],"\\|")[[1]])
 resp <- as.numeric(str_split(signatures[5,"resp"],"\\|")[[1]])
@@ -747,7 +933,8 @@ output_negative <- tcplfit2_core(conc, resp, cutoff)
 grid.arrange(plot_allcurves(output_negative, conc, resp),
           plot_allcurves(output_negative, conc, resp, log_conc = TRUE), ncol = 2)
 
-## ----example 3 cont., fig.height = 6, fig.width = 6---------------------------
+## ----ex3_AUC-getAUC,class.source="fold-show"----------------------------------
+# choose fit method
 fit_method <- "exp3"
 
 # extract corresponding model parameters and predicted response
@@ -757,16 +944,18 @@ pred_resp <- output_negative[[fit_method]][["modl"]]
 estimated_auc2 <- get_AUC(fit_method, min(conc), max(conc), modpars)
 estimated_auc2
 
+## ----ex3_AUC-plot,fig.height = 6, fig.width = 6-------------------------------
 # plot this curve
 pred_resp <- pred_resp[order(conc)]
-plot(conc[order(conc)], pred_resp)
+plot(conc[order(conc)], pred_resp,ylim = c(-1,0),
+     xlab = "Concentration",ylab = "Response",main = "Negative Response AUC")
 lines(conc[order(conc)], pred_resp)
-polygon(c(conc[order(conc)], max(conc)), c(pred_resp, max(pred_resp)), col=rgb(1, 0, 0,0.5))
+polygon(c(conc[order(conc)], max(conc)), c(pred_resp, max(pred_resp)), col=rgb(1,0,0,0.5))
 
-## ----example 3 convert negative AUC-------------------------------------------
+## ----ex3_AUC-abs-neg,class.source="fold-show"---------------------------------
 get_AUC(fit_method, min(conc), max(conc), modpars, return.abs = TRUE) 
 
-## ----example 4, fig.height = 6, fig.width = 6---------------------------------
+## ----ex4_AUC, fig.height = 6, fig.width = 6-----------------------------------
 # simulate a poly2 curve
 conc_sim <- seq(0,3, length.out = 100)
 ## biphasic poly2 parameters
@@ -775,41 +964,46 @@ b2 <- 0.7
 ## converted to tcplfit2's poly2 parameters
 a <- b1^2/b2
 b <- b1/b2
-
+c(a,b)
 ## plot the curve
 resp_sim <- poly2(c(a, b, 0.1), conc_sim)
-plot(conc_sim, resp_sim, type = "l")
+plot(conc_sim, resp_sim, type = "l",
+     xlab = "Concentration",ylab = "Response",main = "Biphasic Response")
 abline(h = 0)
 
-## ----example 4 cont.----------------------------------------------------------
+## ----ex4_AUC-cont,class.source="fold-show"------------------------------------
 # get AUC for the simulated Polynomial 2 curve 
 get_AUC("poly2", min(conc_sim), max(conc_sim), ps = c(a, b))
 
-## ----example 5----------------------------------------------------------------
-out <- tcplhit2_core(output_ex2, conc_ex2, resp_ex2, 0.8, onesd = 0.4)
-out
-post_hit_AUC(out)
+## ----fig.height = 6, fig.width = 6--------------------------------------------
+## plot the curve for the AUC
+plot(conc_sim, resp_sim, type = "l",
+     xlab = "Concentration",ylab = "Response",main = "Biphasic Response AUC")
+abline(h = 0)
+polygon(c(conc_sim[which(resp_sim <= 0)], max(conc_sim[which(resp_sim <= 0)])), c(resp_sim[which(resp_sim <= 0)], max(resp_sim[which(resp_sim <= 0)])), col="skyblue")
+polygon(c(conc_sim[c(max(which(resp_sim <= 0)),which(resp_sim > 0))], max(conc_sim[which(resp_sim > 0)])), c(0,resp_sim[which(resp_sim > 0)], 0), col="indianred")
 
 ## ----setup-2, warning=FALSE---------------------------------------------------
 # prepare concentration data for demonstration
 ex_conc <- seq(0, 100, length.out = 500)
 ex2_conc <- seq(0, 3, length.out = 100)
 
-## ----poly 1, fig.width=5, fig.height=5, warning=FALSE-------------------------
+## ----poly-1,fig.width=5,fig.height=5,warning=FALSE----------------------------
 poly1_plot <- ggplot(mapping=aes(ex_conc)) +  
   geom_line(aes(y = 55*ex_conc, color = "a=55")) +
   geom_line(aes(y = 10*ex_conc, color = "a=10")) +
   geom_line(aes(y = 0.05*ex_conc, color = "a=0.05")) +
   geom_line(aes(y = -5*ex_conc, color = "a=(-5)")) +
   labs(x = "Concentration", y = "Response") +
-  theme(legend.position = c(0.1,0.8)) +
+  theme_bw()+
+  theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='a values',
                      breaks=c('a=(-5)', 'a=0.05', 'a=10', 'a=55'),
                      values=c('a=(-5)'='black', 'a=0.05' = 'red', 'a=10'='blue', 'a=55'='darkviolet'))
 
 poly1_plot
 
-## ----poly 2, fig.width=8, fig.height=5, warning=FALSE-------------------------
+## ----poly-2, fig.width=8, fig.height=5, warning=FALSE-------------------------
 fits_poly <- data.frame(
   # change a 
   y1 = poly2(ps = c(a = 40, b = 2),x = ex_conc),
@@ -832,6 +1026,7 @@ poly2_plot1 <- ggplot(fits_poly, aes(ex_conc)) +
   geom_line(aes(y = y4, color = "a=(-2)")) +
   geom_line(aes(y = y5, color = "a=(-20)")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='a values',
                      breaks=c('a=(-20)', 'a=(-2)', 'a=0.1', 'a=6', 'a=40'),
@@ -843,6 +1038,7 @@ poly2_plot2 <- ggplot(fits_poly, aes(ex_conc)) +
   geom_line(aes(y = y7, color = "b=7")) +
   geom_line(aes(y = y8, color = "b=16")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='b values',
                      breaks=c('b=1.8', 'b=7', 'b=16'),
@@ -869,6 +1065,7 @@ pow_plot1 <- ggplot(fits_pow, aes(ex2_conc)) +
   geom_line(aes(y = y2, color = "a=7.2")) +
   geom_line(aes(y = y3, color = "a=(-3.2)")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='a values',
                      breaks=c('a=(-3.2)', 'a=0.48', 'a=7.2'),
@@ -880,12 +1077,11 @@ pow_plot2 <- ggplot(fits_pow, aes(ex2_conc)) +
   geom_line(aes(y = y5, color = "p=1.6")) +
   geom_line(aes(y = y6, color = "p=3.2")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='p values',
                      breaks=c('p=0.3', 'p=1.6', 'p=3.2'),
                      values=c('p=0.3'='black', 'p=1.6'='red', 'p=3.2'='blue'))
-
-
 
 grid.arrange(pow_plot1, pow_plot2, ncol = 2)
 
@@ -914,7 +1110,8 @@ hill_plot1 <- ggplot(fits_hill, aes(log10(ex_conc))) +
   geom_line(aes(y = y2, color = "tp=200")) +
   geom_line(aes(y = y3, color = "tp=850")) +
   labs(x = "Concentration in Log-10 Scale", y = "Response") +
-  theme(legend.position = c(0.2,0.8),
+  theme_bw()+
+  theme(legend.position = c(0.15,0.7),
         legend.key.size = unit(0.5, 'cm')) +
   scale_color_manual(name='tp values',
                      breaks=c('tp=(-200)', 'tp=200', 'tp=850'),
@@ -926,7 +1123,8 @@ hill_plot2 <- ggplot(fits_hill, aes(log10(ex_conc))) +
   geom_line(aes(y = y5, color = "ga=12")) +
   geom_line(aes(y = y6, color = "ga=20")) +
   labs(x = "Concentration in Log-10 Scale", y = "Response") +
-  theme(legend.position = c(0.8,0.25),
+  theme_bw()+
+  theme(legend.position = c(0.15,0.7),
         legend.key.size = unit(0.4, 'cm')) +
   scale_color_manual(name='ga values',
                      breaks=c('ga=4', 'ga=12', 'ga=20'),
@@ -938,7 +1136,8 @@ hill_plot3 <- ggplot(fits_hill, aes(log10(ex_conc))) +
   geom_line(aes(y = y8, color = "p=2")) +
   geom_line(aes(y = y9, color = "p=5")) +
   labs(x = "Concentration in Log-10 Scale", y = "Response") +
-  theme(legend.position = c(0.8,0.2),
+  theme_bw()+
+  theme(legend.position = c(0.15,0.7),
         legend.key.size = unit(0.4, 'cm')) +
   scale_color_manual(name='p values',
                      breaks=c('p=0.5', 'p=2', 'p=5'),
@@ -967,6 +1166,7 @@ gnls_plot1 <- ggplot(fits_gnls, aes(log10(ex_conc))) +
   geom_line(aes(y = y2, color = "la=50")) +
   geom_line(aes(y = y3, color = "la=100")) +
   labs(x = "Concentration in Log-10 Scale", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='la values',
                      breaks=c('la=17', 'la=50', 'la=100'),
@@ -978,6 +1178,7 @@ gnls_plot2 <- ggplot(fits_gnls, aes(log10(ex_conc))) +
   geom_line(aes(y = y5, color = "q=1.2")) +
   geom_line(aes(y = y6, color = "q=8")) +
   labs(x = "Concentration in Log-10 Scale", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='q values',
                      breaks=c('q=0.3', 'q=1.2', 'q=8'),
@@ -1008,6 +1209,7 @@ exp2_plot1 <- ggplot(fits_exp2, aes(ex2_conc)) +
   geom_line(aes(y = y3, color = "a=0.1")) +
   geom_line(aes(y = y4, color = "a=(-3)")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='a values',
                      breaks=c('a=(-3)', 'a=0.1', 'a=9', 'a=20'),
@@ -1019,6 +1221,7 @@ exp2_plot2 <- ggplot(fits_exp2, aes(ex2_conc)) +
   geom_line(aes(y = y6, color = "b=9")) +
   geom_line(aes(y = y7, color = "b=20")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='b values',
                      breaks=c('b=4', 'b=9', 'b=20'),
@@ -1041,11 +1244,11 @@ exp3_plot <- ggplot(fits_exp3, aes(ex2_conc)) +
   geom_line(aes(y = y2, color = "p=0.9")) +
   geom_line(aes(y = y3, color = "p=1.2")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.15,0.8)) +
   scale_color_manual(name='p values',
                      breaks=c('p=0.3', 'p=0.9', 'p=1.2'),
                      values=c('p=0.3'='black', 'p=0.9'='red', 'p=1.2'='blue'))
-
 
 exp3_plot
 
@@ -1069,7 +1272,8 @@ exp4_plot1 <- ggplot(fits_exp4, aes(ex_conc)) +
   geom_line(aes(y = y2, color = "tp=200")) +
   geom_line(aes(y = y3, color = "tp=(-500)")) +
   labs(x = "Concentration", y = "Response") +
-  theme(legend.position = c(0.1,0.8)) +
+  theme_bw()+
+  theme(legend.position = c(0.8,0.2)) +
   scale_color_manual(name='tp values',
                      breaks=c('tp=(-500)', 'tp=200', 'tp=895'),
                      values=c('tp=(-500)'='black', 'tp=200'='red', 'tp=895'='blue'))
@@ -1081,6 +1285,7 @@ exp4_plot2 <- ggplot(fits_exp4, aes(ex_conc)) +
   geom_line(aes(y = y5, color = "ga=10")) +
   geom_line(aes(y = y6, color = "ga=20")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.8,0.2)) +
   scale_color_manual(name='ga values',
                      breaks=c('ga=0.4', 'ga=10', 'ga=20'),
@@ -1104,11 +1309,11 @@ exp5_plot <- ggplot(fits_exp5, aes(ex_conc)) +
   geom_line(aes(y = y2, color = "p=3.4")) +
   geom_line(aes(y = y3, color = "p=8")) +
   labs(x = "Concentration", y = "Response") +
+  theme_bw()+
   theme(legend.position = c(0.8,0.2)) +
   scale_color_manual(name='p values',
                      breaks=c('p=0.3', 'p=3.4', 'p=8'),
                      values=c('p=0.3'='black', 'p=3.4'='red', 'p=8'='blue'))
-
 
 exp5_plot
 
@@ -1142,12 +1347,12 @@ OutputParameters <- c(
   "a (y-scale)", # linear,
   "a (y-scale) </br> b (x-scale)", # quadratic
   "a (y-scale) </br> p (power)", # power
-  "tp (top) </br> ga (gain AC50) </br> p (gain-power)", # hill
-  "tp (top) </br> ga (gain AC50) </br> p (gain power) </br> la (loss AC50) </br> q (loss power)", # gain-loss
+  "tp (top parameter) </br> ga (gain AC50) </br> p (gain-power)", # hill
+  "tp (top parameter) </br> ga (gain AC50) </br> p (gain power) </br> la (loss AC50) </br> q (loss power)", # gain-loss
   "a (y-scale) </br> b (x-scale)", # exp2
   "a (y-scale) </br> b (x-scale) </br> p (power)", # exp3
-  "tp (top) </br> ga (AC50)", # exp4
-  "tp (top) </br> ga (AC50) </br> p (power)" # exp5
+  "tp (top parameter) </br> ga (AC50)", # exp4
+  "tp (top parameter) </br> ga (AC50) </br> p (power)" # exp5
 )
 # Fifth column - additional model details.
 Details <- c(
